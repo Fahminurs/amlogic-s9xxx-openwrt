@@ -1,0 +1,37 @@
+#!/bin/sh
+# HG680P di belakang modem rumah (192.168.101.0/24): ambil IP dari modem, jangan jadi DHCP server.
+uci set network.lan.proto='dhcp'
+uci -q delete network.lan.ipaddr
+uci -q delete network.lan.netmask
+uci set dhcp.lan.ignore='1'
+
+# Tailscale: exit node + subnet router keluar lewat lan
+uci set network.tailscale='interface'
+uci set network.tailscale.proto='none'
+uci set network.tailscale.device='tailscale0'
+uci set firewall.tailscale='zone'
+uci set firewall.tailscale.name='tailscale'
+uci set firewall.tailscale.network='tailscale'
+uci set firewall.tailscale.input='ACCEPT'
+uci set firewall.tailscale.output='ACCEPT'
+uci set firewall.tailscale.forward='ACCEPT'
+uci set firewall.ts_lan='forwarding'
+uci set firewall.ts_lan.src='tailscale'
+uci set firewall.ts_lan.dest='lan'
+uci set firewall.@zone[0].masq='1'   # zona lan: lalu lintas dari tailscale keluar pakai IP STB
+
+# watchcat: internet putus 5 menit -> restart lan, 30 menit -> reboot
+while uci -q delete watchcat.@watchcat[0]; do :; done
+uci add watchcat watchcat
+uci set watchcat.@watchcat[-1].mode='restart_iface'
+uci set watchcat.@watchcat[-1].interface='lan'
+uci set watchcat.@watchcat[-1].period='5m'
+uci set watchcat.@watchcat[-1].pinghosts='1.1.1.1 8.8.8.8'
+uci add watchcat watchcat
+uci set watchcat.@watchcat[-1].mode='ping_reboot'
+uci set watchcat.@watchcat[-1].period='30m'
+uci set watchcat.@watchcat[-1].forcedelay='1m'
+uci set watchcat.@watchcat[-1].pinghosts='1.1.1.1 8.8.8.8'
+
+uci commit
+exit 0
