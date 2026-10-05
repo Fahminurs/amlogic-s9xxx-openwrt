@@ -5,6 +5,14 @@ uci -q delete network.lan.ipaddr
 uci -q delete network.lan.netmask
 uci set dhcp.lan.ignore='1'
 
+# IP cadangan permanen untuk colok langsung ke laptop tanpa DHCP: ssh root@169.254.1.2
+uci set network.lan_fallback='interface'
+uci set network.lan_fallback.proto='static'
+uci set network.lan_fallback.device='br-lan'
+uci set network.lan_fallback.ipaddr='169.254.1.2'
+uci set network.lan_fallback.netmask='255.255.0.0'
+uci add_list firewall.@zone[0].network='lan_fallback'
+
 # Tailscale: exit node + subnet router keluar lewat lan
 uci set network.tailscale='interface'
 uci set network.tailscale.proto='none'
