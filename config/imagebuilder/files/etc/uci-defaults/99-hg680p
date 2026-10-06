@@ -4,6 +4,11 @@ uci set network.lan.proto='dhcp'
 uci -q delete network.lan.ipaddr
 uci -q delete network.lan.netmask
 uci set dhcp.lan.ignore='1'
+# Jangan jadi router/DNS IPv6 di jaringan rumah (RA/DHCPv6 sempat membuat laptop memakai STB sebagai DNS)
+uci set dhcp.lan.ra='disabled'
+uci set dhcp.lan.dhcpv6='disabled'
+uci set dhcp.lan.ndp='disabled'
+uci set network.globals.ula_prefix=''
 
 # IP cadangan permanen untuk colok langsung ke laptop tanpa DHCP: ssh root@169.254.1.2
 uci set network.lan_fallback='interface'
